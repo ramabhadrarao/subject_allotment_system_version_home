@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     }
 }
 
-// Get student registration details
+// Get student registration details and their programme
 try {
     $stmt = $conn->prepare("SELECT sr.*, sp.pool_name, sp.semester, sp.batch FROM student_registrations sr JOIN subject_pools sp ON sr.pool_id = sp.id WHERE sr.regno = ? AND sr.pool_id = ?");
     $stmt->execute([$regno, $pool_id]);
@@ -121,9 +121,49 @@ try {
         exit();
     }
     
-    // Get available subjects for this pool
-    $stmt = $conn->prepare("SELECT * FROM subject_pools WHERE id = ? OR (pool_name = ? AND semester = ? AND batch = ? AND is_active = 1) ORDER BY subject_name");
-    $stmt->execute([$pool_id, $student_registration['pool_name'], $student_registration['semester'], $student_registration['batch']]);
+    // Get student's programme from the existing database
+    $student_programme = null;
+    if ($attendance_conn) {
+        $stmt = $attendance_conn->prepare("SELECT programme FROM user WHERE regid = ?");
+        $stmt->execute([$regno]);
+        $student_data = $stmt->fetch();
+        if ($student_data) {
+            $student_programme = $student_data['programme'];
+        }
+    }
+    
+    // Get available subjects for this pool that are allowed for the student's programme
+    if ($student_programme) {
+        $stmt = $conn->prepare("
+            SELECT * FROM subject_pools 
+            WHERE (id = ? OR (pool_name = ? AND semester = ? AND batch = ?)) 
+            AND is_active = 1 
+            AND JSON_CONTAINS(allowed_programmes, JSON_QUOTE(?))
+            ORDER BY subject_name
+        ");
+        $stmt->execute([
+            $pool_id, 
+            $student_registration['pool_name'], 
+            $student_registration['semester'], 
+            $student_registration['batch'],
+            $student_programme
+        ]);
+    } else {
+        // Fallback if programme not found - show all subjects in pool
+        $stmt = $conn->prepare("
+            SELECT * FROM subject_pools 
+            WHERE (id = ? OR (pool_name = ? AND semester = ? AND batch = ?)) 
+            AND is_active = 1 
+            ORDER BY subject_name
+        ");
+        $stmt->execute([
+            $pool_id, 
+            $student_registration['pool_name'], 
+            $student_registration['semester'], 
+            $student_registration['batch']
+        ]);
+    }
+    
     $available_subjects = $stmt->fetchAll();
     
     // Get current priorities
@@ -225,6 +265,12 @@ log_activity($conn, 'student', $regno, 'dashboard_view');
             background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
         }
+        .programme-info {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
         @media (max-width: 768px) {
             .card {
                 margin-bottom: 15px;
@@ -301,6 +347,12 @@ log_activity($conn, 'student', $regno, 'dashboard_view');
                             <i class="fas fa-phone me-2"></i>
                             <?php echo htmlspecialchars($_SESSION['student_mobile']); ?>
                         </p>
+                        <?php if ($student_programme): ?>
+                        <p class="mb-2">
+                            <i class="fas fa-graduation-cap me-2"></i>
+                            <?php echo htmlspecialchars($student_programme); ?>
+                        </p>
+                        <?php endif; ?>
                         <hr class="bg-white">
                         <div class="row text-center">
                             <div class="col-6">
@@ -379,6 +431,13 @@ log_activity($conn, 'student', $regno, 'dashboard_view');
                         <?php endif; ?>
                     </div>
                     <div class="card-body">
+                        <?php if ($student_programme): ?>
+                        <div class="programme-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Showing subjects available for your programme:</strong> <?php echo htmlspecialchars($student_programme); ?>
+                        </div>
+                        <?php endif; ?>
+
                         <?php if ($student_registration['status'] == 'frozen'): ?>
                             <div class="alert alert-warning">
                                 <i class="fas fa-lock me-2"></i>
@@ -402,7 +461,7 @@ log_activity($conn, 'student', $regno, 'dashboard_view');
                             <?php if (empty($available_subjects)): ?>
                                 <div class="alert alert-info text-center">
                                     <i class="fas fa-info-circle fa-2x mb-2"></i>
-                                    <p>No subjects available for your pool at the moment.</p>
+                                    <p>No subjects available for your programme (<?php echo htmlspecialchars($student_programme ?? 'Unknown'); ?>) in this pool.</p>
                                 </div>
                             <?php else: ?>
                                 <div class="row">
@@ -452,6 +511,7 @@ log_activity($conn, 'student', $regno, 'dashboard_view');
                                                 <li>No duplicate priorities allowed</li>
                                                 <li>You can save multiple times before freezing</li>
                                                 <li>Once frozen, you cannot modify your selections</li>
+                                                <li class="text-primary"><strong>Only subjects available for your programme (<?php echo htmlspecialchars($student_programme ?? 'Unknown'); ?>) are shown</strong></li>
                                             </ul>
                                         </div>
                                         
