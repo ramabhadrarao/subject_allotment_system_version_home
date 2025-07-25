@@ -227,6 +227,10 @@ log_activity($conn, 'admin', $_SESSION['admin_username'], 'dashboard_view');
                                 <i class="fas fa-database me-2 text-info"></i>Backup & Restore
                             </a>
                         </li>
+
+                <a href="delete_registrations.php" class="nav-link">
+    <i class="fas fa-trash-alt me-2"></i>Delete Registrations
+</a>
                     </ul>
                 </div>
             </div>

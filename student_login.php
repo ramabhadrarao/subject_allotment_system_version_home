@@ -73,13 +73,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $pool_id = intval($_POST['pool_id'] ?? 0);
             
             // Normalize mobile to 10 digits
-            $mobile = preg_replace('/^(\+91|91)/', '', $mobile);
+            // Normalize mobile to 10 digits
+                if (strlen($mobile) > 10) {
+                    $mobile = preg_replace('/^(\+91|91)/', '', $mobile);
+                }
             
             if (empty($regno) || empty($email) || empty($mobile) || empty($pool_id)) {
                 $error_message = 'Please fill in all required fields.';
             } else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $error_message = 'Please enter a valid email address.';
-            } else if (!preg_match('/^[6-9][0-9]{9}$/', $mobile)) {
+            } else if (!preg_match('/^[4-9][0-9]{9}$/', $mobile)) {
                 $error_message = 'Mobile number must be 10 digits starting with 6-9.';
             } else {
                 try {
@@ -97,7 +100,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         // Validate email and mobile match (normalize both for comparison)
                         $student_email = trim(strtolower($student_data['email']));
                         $student_mobile = trim(preg_replace('/\s+/', '', $student_data['mobile']));
-                        $student_mobile = preg_replace('/^(\+91|91)/', '', $student_mobile);
+                                if (strlen($student_mobile) > 10) {
+            $student_mobile = preg_replace('/^(\+91|91)/', '', $student_mobile);
+        }
+                            
                         
                         if ($student_email !== $email) {
                             $error_message = 'Email address does not match our records. Please use the email from your student profile.';
@@ -517,16 +523,24 @@ log_activity($conn, 'system', 'anonymous', 'student_portal_accessed');
     <script>
         // Auto-format mobile numbers by removing spaces and normalizing
         function formatMobile(input) {
-            // Remove all spaces and normalize
-            let value = input.value.replace(/\s+/g, '');
-            // Remove country code if present
-            value = value.replace(/^(\+91|91)/, '');
-            // Keep only digits
-            value = value.replace(/[^0-9]/g, '');
-            // Limit to 10 digits
-            value = value.substring(0, 10);
-            input.value = value;
-        }
+    // Remove all spaces
+    let value = input.value.replace(/\s+/g, '');
+    
+    // Keep only digits
+    value = value.replace(/[^0-9]/g, '');
+
+    // Remove country code only if length is more than 10
+    if (value.length > 10) {
+        value = value.replace(/^(\+91|91)/, '');
+    }
+
+    // Limit to 10 digits
+    value = value.substring(0, 10);
+
+    // Update the input
+    input.value = value;
+}
+
         
         // Add event listeners to mobile fields
         document.addEventListener('DOMContentLoaded', function() {

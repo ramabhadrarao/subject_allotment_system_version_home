@@ -30,7 +30,10 @@ $email = strtolower(trim($_POST['email'] ?? ''));
 $mobile = trim(preg_replace('/\s+/', '', $_POST['mobile'] ?? '')); // Remove all spaces from mobile
 
 // Normalize mobile to 10 digits
-$mobile = preg_replace('/^(\+91|91)/', '', $mobile);
+// Normalize mobile to 10 digits
+if (strlen($mobile) > 10) {
+    $mobile = preg_replace('/^(\+91|91)/', '', $mobile);
+}
 
 // Validate input
 if (empty($regno) || empty($email) || empty($mobile)) {
@@ -83,7 +86,11 @@ try {
     $student_mobile = trim(preg_replace('/\s+/', '', $student['mobile']));
     
     // Normalize student mobile to 10 digits if it has country code
+if (strlen($student_mobile) > 10) {
     $student_mobile = preg_replace('/^(\+91|91)/', '', $student_mobile);
+}
+    
+    
     
     // Debug logging
     error_log("Checking eligibility for: $regno");
