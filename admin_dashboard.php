@@ -218,6 +218,11 @@ log_activity($conn, 'admin', $_SESSION['admin_username'], 'dashboard_view');
                             </a>
                         </li>
                         <li class="nav-item">
+    <a class="nav-link" href="result_publication.php">
+        <i class="fas fa-bullhorn me-2"></i>Publish Results
+    </a>
+</li>
+                        <li class="nav-item">
     <a class="nav-link text-danger" href="delete_all_data.php">
         <i class="fas fa-trash-alt me-2"></i>Delete All Data
     </a>
