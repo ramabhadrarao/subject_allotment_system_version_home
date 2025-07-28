@@ -217,6 +217,7 @@ log_activity($conn, 'admin', $_SESSION['admin_username'], 'dashboard_view');
                                 <i class="fas fa-chart-bar me-2"></i>Reports
                             </a>
                         </li>
+                        
                         <li class="nav-item">
     <a class="nav-link" href="result_publication.php">
         <i class="fas fa-bullhorn me-2"></i>Publish Results
@@ -232,7 +233,26 @@ log_activity($conn, 'admin', $_SESSION['admin_username'], 'dashboard_view');
                                 <i class="fas fa-database me-2 text-info"></i>Backup & Restore
                             </a>
                         </li>
-
+ <li class="nav-item">
+                            <a class="nav-link" href="reports.php">
+                                <i class="fas fa-chart-bar me-2"></i>Reports
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="allotment_report.php">
+                                <i class="fas fa-trophy me-2"></i>Allotment Report
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="cross_verification_report.php">
+                                <i class="fas fa-check-double me-2"></i>Cross Verification
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="registration_details_report.php">
+                                <i class="fas fa-clipboard-list me-2"></i>Registration Details
+                            </a>
+                        </li>
                 <a href="delete_registrations.php" class="nav-link">
     <i class="fas fa-trash-alt me-2"></i>Delete Registrations
 </a>
